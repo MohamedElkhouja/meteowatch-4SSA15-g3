@@ -1,20 +1,20 @@
 # Guide de contribution (équipe de 6)
 
 ## Règle d'or
-Chaque membre travaille **uniquement dans le dossier de son microservice** (`Backend/service-X/`). Cela évite les conflits et prouve la contribution de chacun (critère I3 : commits personnels réguliers).
+Chaque membre travaille **uniquement dans le dossier de son microservice** (`Backend/<service>/`). Cela évite les conflits et prouve la contribution de chacun (critère I3 : commits personnels réguliers).
 
 ## Mise en route
 ```bash
 git clone https://github.com/<org-ou-user>/<nom-du-projet-classe-groupe>.git
 cd <nom-du-projet-classe-groupe>
 git checkout develop
-git checkout -b feature/service-X-init
+git checkout -b feature/<service>-init
 ```
 
 ## Branches
 - `main` : version stable, rendue à l'enseignant. Ne jamais pousser directement.
 - `develop` : intégration de l'équipe.
-- `feature/service-X-<description>` : une branche par tâche (ex. `feature/service-2-entity-user`).
+- `feature/<service>-<description>` : une branche par tâche (ex. `feature/service-2-entity-user`).
 
 ## Workflow
 1. `git pull origin develop` avant de commencer.
@@ -33,7 +33,7 @@ Format : `type(service): description`
 
 ## Fichiers partagés (à modifier avec précaution, via PR)
 - `README.md`, `Documentation/`, `docker-compose.yml`, `common-service`
-- Documentation : chaque membre ajoute ses diagrammes dans `Documentation/Diagrams/<service-X>/`.
+- Documentation : chaque membre ajoute ses diagrammes dans `Documentation/Diagrams/<<service>>/`.
 
 ## À faire dans chaque microservice
 - Projet initialisé (Spring Initializr ou autre techno prévue), compile et démarre.

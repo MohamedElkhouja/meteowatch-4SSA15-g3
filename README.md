@@ -1,62 +1,113 @@
-# NomDuProjet
+# MeteoWatch – Plateforme météo à base de microservices
 
 > Projet AWD 2026-2027 – Validation 1 (conception microservices)
 > Classe : 4XXX – Groupe : GX
 > Enseignant (collaborateur du dépôt) : @...
 
 ## 1. Description du sujet
-_Idée générale, problème réel résolu, périmètre (3-5 lignes) – à remplir par toute l'équipe._
+MeteoWatch collecte les relevés de stations météo, les compare aux prévisions, déclenche des alertes de vigilance (vert, jaune, orange, rouge) quand des seuils sont dépassés et notifie les utilisateurs abonnés à leur région. Un tableau de bord avec prédiction (Python) complète la plateforme.
 
-## 2. Équipe et responsabilités
+**Acteurs :**
+- **Visiteur / utilisateur connecté** : consulte prévisions et relevés, gère ses villes favorites et ses abonnements, lit ses notifications.
+- **Administrateur** : gère les stations, capteurs, seuils d'alerte, modèles de messages.
+- **Système externe** : API Open-Meteo (prévisions), serveur email / push.
 
-| # | Membre | GitHub | Microservice | Base de données | Port |
-|---|---|---|---|---|---|
-| 1 | Nom Prénom | @... | `service-1` : ... | ... | 8081 |
-| 2 | Nom Prénom | @... | `service-2` : ... | ... | 8082 |
-| 3 | Nom Prénom | @... | `service-3` : ... | ... | 8083 |
-| 4 | Nom Prénom | @... | `service-4` : ... | ... | 8084 |
-| 5 | Nom Prénom | @... | `service-5` : ... (technologie avancée) | ... | 8085 |
-| 6 | Nom Prénom | @... | `service-6` : ... | ... | 8086 |
-| Tous | Toute l'équipe | | `common-service` (présenté par un seul membre) | ... | 8080 |
+## 2. Équipe et microservices
 
-Renommez les dossiers `service-X` avec le nom réel du microservice.
+| Module | Membre | Microservice | Base de données | Port |
+|---|---|---|---|---|
+| 1 – Stations météo | Maha Hammami | `station-service` | PostgreSQL | 8081 |
+| 2 – Alertes et vigilances | Linda Nebily | `alert-service` | PostgreSQL | 8082 |
+| 3 – Utilisateurs et abonnements | Chaima Amri | `user-service` | MongoDB | 8083 |
+| 4 – Relevés météo | Ramzi Ben Hmida | `readings-service` | MySQL | 8084 |
+| 5 – Prévisions | Amine Arfaoui | `forecast-service` | PostgreSQL | 8085 |
+| 6 – Notifications | Mohamed Taher Elkhouja | `notification-service` | MySQL | 8086 |
+| 7 – Statistiques / tableau de bord (techno avancée, **commun**) | Toute l'équipe | `analytics-service` (Python) | PostgreSQL | 8087 |
 
-Outil de gestion de projet : _GitHub Projects / Trello / Jira – lien_
+Chaque README dans `Backend/<service>/` détaille le modèle de données, l'API et les interactions du service.
+Outil de gestion de projet : _GitHub Projects / Trello – lien_
 
-## 3. Acteurs et fonctionnalités principales
-- **Acteur 1** : ...
-- **Acteur 2** : ...
+## 3. Fonctionnalités principales
+- Gestion des stations et capteurs, recherche par ville ou région
+- Enregistrement et historique des relevés, statistiques journalières
+- Seuils, niveaux de vigilance, cycle de vie des alertes
+- Profil, villes favorites, abonnements par région et canal
+- Prévisions 1 à 7 jours (Open-Meteo) et comparaison avec le réel
+- Notifications (email, push) avec historique lue / non lue
+- Tableau de bord et prédiction
 
-## 4. Architecture
-![Architecture globale](Documentation/Diagrams/architecture-globale.png)
+## 4. Architecture globale
 
-Frontend, API Gateway, Eureka (Discovery), Config Server, Keycloak (sécurité), microservices, une base par service, Docker.
+```mermaid
+flowchart TB
+    FE[Frontend] --> GW[API Gateway]
+    KC[Keycloak] -. JWT .- GW
+    GW --> ST[station-service<br/>PostgreSQL]
+    GW --> AL[alert-service<br/>PostgreSQL]
+    GW --> US[user-service<br/>MongoDB]
+    GW --> RD[readings-service<br/>MySQL]
+    GW --> FC[forecast-service<br/>PostgreSQL]
+    GW --> NO[notification-service<br/>MySQL]
+    GW --> AN[analytics-service Python<br/>PostgreSQL]
+    EU[Eureka] -. registre .- GW
+    CF[Config Server] -. config .- ST
+    MQ{{RabbitMQ}}
+    RD -- reading.recorded --> MQ
+    MQ --> AL
+    MQ --> AN
+    AL -- alert.triggered --> MQ
+    MQ --> NO
+    RD -- OpenFeign --> ST
+    AL -- OpenFeign --> ST
+    FC -- OpenFeign --> RD
+    FC -- OpenFeign --> ST
+    NO -- OpenFeign --> US
+    AN -- HTTP --> RD
+    FC -- HTTP --> OM[Open-Meteo]
+```
+
+Composants : Frontend, API Gateway, Eureka, Config Server, Keycloak, RabbitMQ, 7 microservices (une base chacun, aucune base partagée), Docker. Version image à déposer dans `Documentation/Diagrams/architecture-globale.png`.
 
 ## 5. Interactions entre services
 
-| Appelant | Appelé | Mode (OpenFeign / asynchrone) | Données | Justification |
+| Appelant | Appelé | Mode | Données | Justification |
 |---|---|---|---|---|
-| ... | ... | ... | ... | ... |
+| readings-service | station-service | OpenFeign (sync) | existence de la station | réponse immédiate nécessaire pour valider |
+| readings-service | alert-service, analytics-service | async `reading.recorded` | relevé | ne pas bloquer l'enregistrement |
+| alert-service | station-service | OpenFeign (sync) | région | enrichir l'alerte |
+| alert-service | notification-service | async `alert.triggered` | niveau, région, valeur | découplage, pas de perte si panne |
+| notification-service | user-service | OpenFeign (sync) | abonnés + canaux | besoin du résultat pour envoyer |
+| forecast-service | readings-service, station-service | OpenFeign (sync) | relevés, coordonnées | comparaison à la demande |
+| forecast-service | Open-Meteo | HTTP (sync) | prévisions | source externe |
+| analytics-service | readings-service, alert-service | async + HTTP | relevés, alertes | statistiques et entraînement |
 
-## 6. Structure du dépôt
+Pannes : fallback OpenFeign (Resilience4j) côté appelant, files RabbitMQ persistantes pour l'asynchrone.
+
+## 6. Technologies
+Spring Boot, Spring Cloud (Gateway, Eureka, Config Server, OpenFeign), Keycloak, RabbitMQ, PostgreSQL, MySQL, MongoDB, Python FastAPI + scikit-learn, Docker, Frontend (Angular / React à confirmer).
+
+## 7. Structure du dépôt
 ```
-├── Backend/            # un projet par microservice (+ common-service)
-├── Frontend/           # application cliente
+├── Backend/
+│   ├── station-service/  alert-service/  user-service/
+│   ├── readings-service/ forecast-service/ notification-service/
+│   └── analytics-service/        # Python, module commun
+├── Frontend/
 ├── Documentation/
-│   ├── Presentation/   # présentation séance 4
-│   ├── Diagrams/       # architecture, classes, cas d'utilisation, séquences
+│   ├── Presentation/
+│   ├── Diagrams/
 │   └── CHECKLIST.md
-├── CONTRIBUTING.md     # règles de travail Git (à lire en premier)
+├── CONTRIBUTING.md               # règles Git (à lire en premier)
 └── README.md
 ```
 
-## 7. Lancement
+## 8. Lancement
 ```bash
-# Prérequis : JDK 17+, Maven, Docker
-cd Backend/<service> && mvn spring-boot:run
-# ou, une fois le docker-compose ajouté :
-docker compose up
+# Java : JDK 17+, Maven ; Python : 3.11+ ; Docker
+cd Backend/<service> && mvn spring-boot:run          # services Spring
+cd Backend/analytics-service && uvicorn app.main:app --port 8087
+docker compose up                                      # une fois le compose ajouté
 ```
 
-## 8. Planning prévisionnel et risques
-_Résumé (détails dans le dossier technique)._
+## 9. Planning prévisionnel et risques
+_À compléter (semaines, jalons). Risques : intégration entre services, quota Open-Meteo, configuration Keycloak, temps d'apprentissage Python/IA._
