@@ -14,7 +14,7 @@ git checkout -b feature/<service>-init
 ## Branches
 - `main` : version stable, rendue à l'enseignant. Ne jamais pousser directement.
 - `develop` : intégration de l'équipe.
-- `feature/<service>-<description>` : une branche par tâche (ex. `feature/service-2-entity-user`).
+- `feature/<service>-<description>` : une branche par tâche (ex. `feature/user-service-entity-user`).
 
 ## Workflow
 1. `git pull origin develop` avant de commencer.
@@ -26,14 +26,14 @@ git checkout -b feature/<service>-init
 
 ## Messages de commit
 Format : `type(service): description`
-- `feat(service-1): ajout de l'entité Produit`
-- `fix(service-3): correction du code de réponse 404`
-- `docs: diagramme de classes service-2`
-- `chore(common): configuration Eureka`
+- `feat(station-service): ajout de l'entité Produit`
+- `fix(alert-service): correction du code de réponse 404`
+- `docs: diagramme de classes user-service`
+- `chore(analytics): configuration Eureka`
 
 ## Fichiers partagés (à modifier avec précaution, via PR)
-- `README.md`, `Documentation/`, `docker-compose.yml`, `common-service`
-- Documentation : chaque membre ajoute ses diagrammes dans `Documentation/Diagrams/<<service>>/`.
+- `README.md`, `Documentation/`, `docker-compose.yml`, `analytics-service`
+- Documentation : chaque membre ajoute ses diagrammes dans `Documentation/Diagrams/<service>/`.
 
 ## À faire dans chaque microservice
 - Projet initialisé (Spring Initializr ou autre techno prévue), compile et démarre.
