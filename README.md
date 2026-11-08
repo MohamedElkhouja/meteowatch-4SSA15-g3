@@ -16,12 +16,12 @@ MeteoWatch collecte les relevés de stations météo, les compare aux prévision
 
 | Module | Membre | Microservice | Base de données | Port |
 |---|---|---|---|---|
-| 1 – Stations météo | Maha Hammami | `station-service` | PostgreSQL | 8081 |
+| 1 – Stations météo | Maha Hammami | `station-service` | MongoDB | 8081 |
 | 2 – Alertes et vigilances | Linda Nebily | `alert-service` | PostgreSQL | 8082 |
 | 3 – Utilisateurs et abonnements | Chaima Amri | `user-service` | MongoDB | 8083 |
-| 4 – Relevés météo | Ramzi Ben Hmida | `readings-service` | MySQL | 8084 |
+| 4 – Relevés météo | Ramzi Ben Hmida | `readings-service` | MongoDB | 8084 |
 | 5 – Prévisions | Amine Arfaoui | `forecast-service` | PostgreSQL | 8085 |
-| 6 – Notifications | Mohamed Taher Elkhouja | `notification-service` | MySQL | 8086 |
+| 6 – Notifications | Mohamed Taher Elkhouja | `notification-service` | MongoDB | 8086 |
 | 7 – Statistiques / tableau de bord (techno avancée, **commun**) | Toute l'équipe | `analytics-service` (Python) | PostgreSQL | 8087 |
 
 Chaque README dans `Backend/<service>/` détaille le modèle de données, l'API et les interactions du service.
@@ -42,12 +42,12 @@ Outil de gestion de projet : _GitHub Projects / Trello – lien_
 flowchart TB
     FE[Frontend] --> GW[API Gateway]
     KC[Keycloak] -. JWT .- GW
-    GW --> ST[station-service<br/>PostgreSQL]
+    GW --> ST[station-service<br/>MongoDB]
     GW --> AL[alert-service<br/>PostgreSQL]
     GW --> US[user-service<br/>MongoDB]
-    GW --> RD[readings-service<br/>MySQL]
+    GW --> RD[readings-service<br/>MongoDB]
     GW --> FC[forecast-service<br/>PostgreSQL]
-    GW --> NO[notification-service<br/>MySQL]
+    GW --> NO[notification-service<br/>MongoDB]
     GW --> AN[analytics-service Python<br/>PostgreSQL]
     EU[Eureka] -. registre .- GW
     CF[Config Server] -. config .- ST
@@ -84,7 +84,7 @@ Composants : Frontend, API Gateway, Eureka, Config Server, Keycloak, RabbitMQ, 7
 Pannes : fallback OpenFeign (Resilience4j) côté appelant, files RabbitMQ persistantes pour l'asynchrone.
 
 ## 6. Technologies
-Spring Boot, Spring Cloud (Gateway, Eureka, Config Server, OpenFeign), Keycloak, RabbitMQ, PostgreSQL, MySQL, MongoDB, Python FastAPI + scikit-learn, Docker, Frontend (Angular / React à confirmer).
+Spring Boot, Spring Cloud (Gateway, Eureka, Config Server, OpenFeign), Keycloak, RabbitMQ, PostgreSQL, MongoDB, Python FastAPI + scikit-learn, Docker, Frontend (Angular / React à confirmer).
 
 ## 7. Structure du dépôt
 ```
