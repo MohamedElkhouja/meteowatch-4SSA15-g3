@@ -1,0 +1,43 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", pad=0.4, nodesep=0.8, ranksep=1.1, fontname="Helvetica",
+         label=<<B>station-service – Diagramme de classes</B><BR/><FONT POINT-SIZE="12">Base : station_db (PostgreSQL) · Responsable : Maha Hammami</FONT>>,
+         labelloc=t, fontsize=20];
+  node [shape=plain, fontname="Helvetica", fontsize=13];
+  edge [fontname="Helvetica", fontsize=12, color="#1f5fa8"];
+
+  Station [label=<
+  <TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#1f5fa8">
+    <TR><TD BGCOLOR="#1f5fa8"><FONT COLOR="white"><B>«Entity» Station</B></FONT></TD></TR>
+    <TR><TD ALIGN="LEFT" BALIGN="LEFT">- id : Long<BR/>- nom : String<BR/>- ville : String<BR/>- latitude : Double<BR/>- longitude : Double<BR/>- altitude : Double<BR/>- dateInstallation : LocalDate<BR/>- active : boolean</TD></TR>
+    <TR><TD ALIGN="LEFT" BALIGN="LEFT" BGCOLOR="#eaf3fb">+ ajouterCapteur(c : Capteur) : void</TD></TR>
+  </TABLE>>];
+
+  Capteur [label=<
+  <TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#1f5fa8">
+    <TR><TD BGCOLOR="#1f5fa8"><FONT COLOR="white"><B>«Entity» Capteur</B></FONT></TD></TR>
+    <TR><TD ALIGN="LEFT" BALIGN="LEFT">- id : Long<BR/>- type : TypeCapteur<BR/>- unite : String<BR/>- etat : EtatCapteur</TD></TR>
+  </TABLE>>];
+
+  TypeCapteur [label=<
+  <TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#5b8c5a">
+    <TR><TD BGCOLOR="#5b8c5a"><FONT COLOR="white"><B>«Enum» TypeCapteur</B></FONT></TD></TR>
+    <TR><TD ALIGN="LEFT" BALIGN="LEFT">TEMPERATURE<BR/>HUMIDITE<BR/>PRESSION<BR/>VENT<BR/>PLUIE</TD></TR>
+  </TABLE>>];
+
+  EtatCapteur [label=<
+  <TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#5b8c5a">
+    <TR><TD BGCOLOR="#5b8c5a"><FONT COLOR="white"><B>«Enum» EtatCapteur</B></FONT></TD></TR>
+    <TR><TD ALIGN="LEFT" BALIGN="LEFT">ACTIF<BR/>EN_PANNE</TD></TR>
+  </TABLE>>];
+
+  Event [label=<
+  <TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="6" COLOR="#c4561f">
+    <TR><TD BGCOLOR="#c4561f"><FONT COLOR="white"><B>«Event» StationDeactivatedEvent</B></FONT></TD></TR>
+    <TR><TD ALIGN="LEFT" BALIGN="LEFT">- stationId : Long<BR/>- nom : String<BR/>- ville : String<BR/>- dateDesactivation : Instant</TD></TR>
+  </TABLE>>];
+
+  Station -> Capteur [arrowhead=none, arrowtail=diamond, dir=both, taillabel="1", headlabel="0..*", label="  possède  "];
+  Capteur -> TypeCapteur [style=dashed, arrowhead=vee, label=" type "];
+  Capteur -> EtatCapteur [style=dashed, arrowhead=vee, label=" état "];
+  Station -> Event [style=dashed, arrowhead=vee, color="#c4561f", fontcolor="#c4561f", label=" publie (RabbitMQ) "];
+}

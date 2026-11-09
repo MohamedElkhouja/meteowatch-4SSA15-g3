@@ -1,0 +1,32 @@
+sequenceDiagram
+    autonumber
+    participant Admin as Administrateur (Angular)
+    participant GW as API Gateway
+    participant ST as station-service
+    participant DB as station_db (PostgreSQL)
+    participant RL as Releves
+    participant PV as Previsions
+    participant MQ as RabbitMQ
+
+    Note over RL,ST: SYNCHRONE (OpenFeign) - verifier qu'une station existe
+    RL->>ST: GET /api/stations/{id}
+    ST->>DB: SELECT station
+    alt station trouvee
+        ST-->>RL: 200 OK -> releve enregistre
+    else station absente
+        ST-->>RL: 404 Not Found -> releve refuse
+    else station-service indisponible
+        RL-->>RL: circuit breaker -> fallback
+    end
+
+    Note over PV,ST: SYNCHRONE (OpenFeign) - recuperer les coordonnees
+    PV->>ST: GET /api/stations/{id}
+    ST-->>PV: 200 OK (latitude, longitude)
+    Note over PV: si indisponible : fallback (circuit breaker)
+
+    Note over Admin,MQ: ASYNCHRONE (RabbitMQ) - suppression d'une station
+    Admin->>GW: DELETE /api/stations/{id} (JWT ADMIN)
+    GW->>ST: DELETE /api/stations/{id}
+    ST->>DB: UPDATE active = false
+    ST-->>GW: 204 No Content
+    ST-)MQ: publie StationDeactivated (station.deactivated)
