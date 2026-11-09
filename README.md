@@ -1,8 +1,8 @@
 # MeteoWatch – Plateforme météo à base de microservices
 
-*Projet AWD 2026-2027 – Validation 1 (conception microservices)*
-Classe : 4SSA15 – Groupe : G3
-Enseignant (collaborateur du dépôt) : @...
+*Projet AWD 2026-2027
+Classe : 4SSA15 – G3
+Enseignant (Alaa Rami)
 
 ## 1. Description du sujet
 
