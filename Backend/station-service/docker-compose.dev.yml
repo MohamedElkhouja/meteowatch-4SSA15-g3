@@ -1,0 +1,16 @@
+# Infrastructure minimale pour tester station-service seul en local.
+# (Le docker-compose complet du projet est gere par Amine.)
+services:
+  station-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: station_db
+      POSTGRES_USER: meteo
+      POSTGRES_PASSWORD: meteo
+    ports:
+      - "5432:5432"
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
