@@ -1,0 +1,44 @@
+@startuml readings-interactions
+title readings-service – Interactions (synchrone et asynchrone)
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+skinparam sequenceMessageAlign left
+skinparam participantPadding 12
+autonumber
+
+actor "Client\n(via API Gateway)" as C
+participant "readings-service" as R #DCE9F5
+participant "station-service" as S
+database "MongoDB\n(observation_db)" as DB
+queue "RabbitMQ\n(meteowatch.events)" as MQ
+participant "alert-service" as A
+participant "analytics-service" as AN
+
+== Cas nominal : POST /api/releves ==
+C -> R : POST /api/releves
+R -> S : GET /api/stations/{id}\n(OpenFeign, synchrone)
+S --> R : 200 station (ville, active)
+R -> DB : insert relevé (statut VALIDE)
+R -> MQ : ObservationRecorded\n(asynchrone, un par mesure)
+R --> C : 201 Created
+MQ -> A : ObservationRecorded\n(compare aux seuils)
+MQ -> AN : ObservationRecorded\n(met à jour les statistiques)
+
+== Station inconnue ==
+C -> R : POST /api/releves
+R -> S : GET /api/stations/{id}
+S --> R : 404
+R --> C : 404 Not Found (rien n'est enregistré)
+
+== Station Service indisponible ==
+C -> R : POST /api/releves
+R -> S : GET /api/stations/{id}
+S -[#red]-> R : timeout / panne\n(circuit breaker + fallback)
+R -> DB : insert relevé (statut A_VALIDER)
+R --> C : 202 Accepted
+...toutes les 60 secondes...
+R -> S : GET /api/stations/{id}
+S --> R : 200 station
+R -> DB : statut -> VALIDE, région renseignée
+R -> MQ : ObservationRecorded
+@enduml

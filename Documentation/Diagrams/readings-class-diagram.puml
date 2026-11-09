@@ -1,0 +1,114 @@
+@startuml readings-class-diagram
+title readings-service – Diagramme de classes
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName DejaVu Sans
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #2F5D8A
+  ArrowColor #444444
+}
+skinparam stereotypeCBackgroundColor #DCE9F5
+hide empty members
+
+package "Entités (MongoDB : observation_db)" {
+  class Releve <<collection releves>> {
+    - id : String
+    - stationId : String
+    - horodatage : Instant
+    - temperature : Double
+    - humidite : Double
+    - pression : Double
+    - vitesseVent : Double
+    - precipitation : Double
+    - region : String
+    - statut : StatutReleve
+    - creeLe : Instant
+  }
+  class StatJournaliere <<collection stats_journalieres>> {
+    - id : String
+    - stationId : String
+    - date : LocalDate
+    - type : TypeMesure
+    - min : Double
+    - max : Double
+    - moyenne : Double
+    - nombreReleves : Integer
+  }
+  enum StatutReleve {
+    VALIDE
+    A_VALIDER
+  }
+  enum TypeMesure {
+    TEMPERATURE
+    HUMIDITE
+    PRESSION
+    VENT
+    PRECIPITATION
+  }
+}
+
+package "Couches applicatives" {
+  class ReleveController <<RestController>> {
+    + creer(ReleveRequest) : ReleveResponse
+    + rechercher(stationId, from, to, page, size) : PageResponse
+    + derniers(stationId, limite) : List<ReleveResponse>
+    + statistiques(stationId, date, type) : StatJournaliereResponse
+    + parId(id) : ReleveResponse
+    + supprimer(id) : void
+  }
+  class ReleveService <<Service>> {
+    + enregistrer(ReleveRequest) : ReleveResponse
+    + revaliderEnAttente() : int
+    + rechercher(...) : PageResponse
+    + derniers(stationId, limite) : List
+    + statistiques(stationId, date, type) : StatJournaliereResponse
+    + supprimer(id) : void
+  }
+  class RevalidationJob <<Scheduled>> {
+    + revalider() : void
+  }
+  interface ReleveRepository <<MongoRepository>>
+  interface StatJournaliereRepository <<MongoRepository>>
+  class ReleveQueryRepository {
+    + rechercher(...) : Page<Releve>
+    + agreger(...) : Agregat
+  }
+}
+
+package "Interactions" {
+  interface StationClient <<FeignClient>> {
+    + getStation(id) : StationDto
+  }
+  class StationClientFallbackFactory <<Resilience4j>>
+  class ObservationEventPublisher {
+    + publierObservations(Releve) : void
+  }
+  class ObservationRecordedEvent <<événement RabbitMQ>> {
+    + eventId : String
+    + observationId : String
+    + stationId : String
+    + region : String
+    + type : TypeMesure
+    + valeur : Double
+    + unite : String
+    + horodatage : Instant
+  }
+}
+
+ReleveController --> ReleveService
+RevalidationJob --> ReleveService
+ReleveService --> ReleveRepository
+ReleveService --> StatJournaliereRepository
+ReleveService --> ReleveQueryRepository
+ReleveService --> StationClient
+ReleveService --> ObservationEventPublisher
+StationClientFallbackFactory ..> StationClient : fallback
+ObservationEventPublisher ..> ObservationRecordedEvent : publie
+ReleveRepository ..> Releve
+ReleveQueryRepository ..> Releve
+StatJournaliereRepository ..> StatJournaliere
+Releve --> StatutReleve
+StatJournaliere --> TypeMesure
+ObservationRecordedEvent --> TypeMesure
+@enduml

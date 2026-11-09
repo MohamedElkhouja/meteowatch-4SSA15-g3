@@ -1,0 +1,19 @@
+# Infrastructure de développement pour readings-service : MongoDB + RabbitMQ
+# Si RabbitMQ tourne déjà (docker compose de station-service), ne démarrer que MongoDB :
+#   docker compose -f docker-compose.dev.yml up -d mongo
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - readings-mongo-data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"   # http://localhost:15672 (guest / guest)
+
+volumes:
+  readings-mongo-data:

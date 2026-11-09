@@ -1,0 +1,65 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: readings-service
+  config:
+    import: "optional:configserver:"
+  cloud:
+    config:
+      enabled: false
+    openfeign:
+      circuitbreaker:
+        enabled: true
+      client:
+        config:
+          default:
+            connectTimeout: 2000
+            readTimeout: 2000
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/observation_db}
+      auto-index-creation: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: 5672
+    username: guest
+    password: guest
+    publisher-confirm-type: correlated
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:false}
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+
+# URL directe de station-service (vide = résolution via Eureka)
+station-service:
+  url: ${STATION_SERVICE_URL:http://localhost:8081}
+
+app:
+  security:
+    enabled: false
+  messaging:
+    exchange: meteowatch.events
+    routing-key-observation-recorded: observation.recorded
+  revalidation:
+    delai-ms: 60000   # relevés « à valider » revérifiés toutes les 60 s
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        ignoreExceptions:
+          - feign.FeignException$NotFound
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

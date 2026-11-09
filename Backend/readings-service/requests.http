@@ -1,0 +1,37 @@
+### IntelliJ (HTTP Client) ou VS Code (extension REST Client)
+@host = http://localhost:8084
+
+### 1. Enregistrer un relevé -> 201 (ou 202 si station-service est indisponible)
+POST {{host}}/api/releves
+Content-Type: application/json
+
+{
+  "stationId": "1",
+  "horodatage": "2026-11-09T10:00:00Z",
+  "temperature": 22.4,
+  "humidite": 61,
+  "pression": 1014,
+  "vitesseVent": 18,
+  "precipitation": 0.2
+}
+
+### 2. Historique filtré par période
+GET {{host}}/api/releves?stationId=1&from=2026-11-09T00:00:00Z&to=2026-11-10T00:00:00Z&page=0&size=20
+
+### 3. Derniers relevés (limite par défaut : 10)
+GET {{host}}/api/releves/derniers?stationId=1&limite=5
+
+### 4. Statistiques journalières (type : TEMPERATURE, HUMIDITE, PRESSION, VENT, PRECIPITATION)
+GET {{host}}/api/releves/stats?stationId=1&date=2026-11-09&type=TEMPERATURE
+
+### 5. Détail (remplacer l'id)
+GET {{host}}/api/releves/REMPLACER_ID
+
+### 6. Supprimer (remplacer l'id) -> 204
+DELETE {{host}}/api/releves/REMPLACER_ID
+
+### 7. Erreur : humidité invalide -> 400
+POST {{host}}/api/releves
+Content-Type: application/json
+
+{ "stationId": "1", "horodatage": "2026-11-09T10:00:00Z", "temperature": 22.4, "humidite": 150, "pression": 1014, "vitesseVent": 18, "precipitation": 0.2 }
