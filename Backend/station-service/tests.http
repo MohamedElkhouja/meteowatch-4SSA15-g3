@@ -1,0 +1,53 @@
+### 1. Créer une station → 201
+POST http://localhost:8081/api/stations
+Content-Type: application/json
+
+{ "nom": "Tunis-Carthage", "ville": "Tunis", "latitude": 36.851, "longitude": 10.227, "altitude": 4, "dateInstallation": "2024-03-15" }
+
+### 2. Lister les stations → 200
+GET http://localhost:8081/api/stations
+
+### 3. Filtrer par ville → 200
+GET http://localhost:8081/api/stations?ville=Tunis
+
+### 4. Détail d'une station → 200
+GET http://localhost:8081/api/stations/1
+
+### 5. Station inexistante → 404
+GET http://localhost:8081/api/stations/99
+
+### 6. Données invalides → 400
+POST http://localhost:8081/api/stations
+Content-Type: application/json
+
+{ "nom": "", "ville": "Tunis", "latitude": 120, "longitude": 10.2 }
+
+### 7. Modifier une station → 200
+PUT http://localhost:8081/api/stations/1
+Content-Type: application/json
+
+{ "nom": "Tunis-Carthage", "ville": "Tunis", "latitude": 36.851, "longitude": 10.227, "altitude": 6 }
+
+### 8. Ajouter un capteur → 201
+POST http://localhost:8081/api/stations/1/capteurs
+Content-Type: application/json
+
+{ "type": "TEMPERATURE", "unite": "°C" }
+
+### 9. Capteur en panne → 200
+PATCH http://localhost:8081/api/capteurs/1/etat
+Content-Type: application/json
+
+{ "etat": "EN_PANNE" }
+
+### 10. Type de capteur inconnu → 400
+POST http://localhost:8081/api/stations/1/capteurs
+Content-Type: application/json
+
+{ "type": "NEIGE", "unite": "cm" }
+
+### 11. Supprimer (désactiver) une station → 204
+DELETE http://localhost:8081/api/stations/1
+
+### 12. Vérifier la suppression logique → "active": false
+GET http://localhost:8081/api/stations/1
