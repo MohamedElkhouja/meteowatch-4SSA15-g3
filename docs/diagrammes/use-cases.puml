@@ -1,0 +1,94 @@
+@startuml
+title Cas d'utilisation — Microservice Alertes et Vigilance
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor White
+  BorderColor #333333
+  ArrowColor #555555
+}
+
+actor "Administrateur" as admin
+actor "Météorologue /\nOpérateur" as operator
+actor "Utilisateur" as user
+actor "Service Météo /\nDonnées" as weather
+actor "Service de\nNotification" as notification
+
+rectangle "Microservice Alertes et Vigilance" {
+  package "Seuils" {
+    usecase "Définir un seuil" as defineThreshold
+    usecase "Modifier un seuil" as modifyThreshold
+    usecase "Supprimer un seuil" as deleteThreshold
+    usecase "Consulter les seuils" as consultThresholds
+    usecase "Activer ou désactiver\nun seuil" as toggleThreshold
+  }
+
+  package "Niveaux de vigilance" {
+    usecase "Définir un niveau de vigilance\n(VERT, JAUNE, ORANGE, ROUGE)" as defineLevel
+    usecase "Consulter les niveaux\nde vigilance" as consultLevels
+    usecase "Évaluer le niveau\nde vigilance" as evaluateLevel
+  }
+
+  package "Alertes" {
+    usecase "Déclencher automatiquement\nune alerte (seuil dépassé)" as triggerAutomatic
+    usecase "Déclencher manuellement\nune alerte" as triggerManual
+    usecase "Modifier le niveau\nd'une alerte" as modifyAlertLevel
+    usecase "Consulter les alertes\nactives" as consultActiveAlerts
+    usecase "Consulter les détails\nd'une alerte" as consultAlertDetails
+    usecase "Clôturer une alerte" as closeAlert
+  }
+
+  package "Historique" {
+    usecase "Consulter l'historique" as consultHistory
+    usecase "Filtrer l'historique\n(date, phénomène, niveau, zone)" as filterHistory
+    usecase "Enregistrer dans\nl'historique" as recordHistory
+  }
+
+  usecase "Notifier le service\nde notification" as notifyService
+}
+
+admin --> defineThreshold
+admin --> modifyThreshold
+admin --> deleteThreshold
+admin --> consultThresholds
+admin --> toggleThreshold
+admin --> defineLevel
+admin --> consultLevels
+
+operator --> defineThreshold
+operator --> modifyThreshold
+operator --> deleteThreshold
+operator --> consultThresholds
+operator --> toggleThreshold
+operator --> defineLevel
+operator --> consultLevels
+operator --> triggerManual
+operator --> modifyAlertLevel
+operator --> consultActiveAlerts
+operator --> consultAlertDetails
+operator --> closeAlert
+operator --> consultHistory
+operator --> filterHistory
+
+user --> consultActiveAlerts
+user --> consultAlertDetails
+user --> consultHistory
+user --> filterHistory
+
+weather --> triggerAutomatic
+notification --> notifyService
+
+triggerAutomatic ..> evaluateLevel : <<include>>
+triggerAutomatic ..> recordHistory : <<include>>
+triggerAutomatic ..> notifyService : <<include>>
+triggerManual ..> evaluateLevel : <<include>>
+triggerManual ..> recordHistory : <<include>>
+triggerManual ..> notifyService : <<include>>
+modifyAlertLevel ..> recordHistory : <<include>>
+closeAlert ..> recordHistory : <<include>>
+filterHistory ..> consultHistory : <<extend>>
+
+@enduml
