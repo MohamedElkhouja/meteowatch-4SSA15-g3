@@ -1,0 +1,37 @@
+classDiagram
+    direction LR
+    class Notification {
+        +String id
+        +String userId
+        +String alertId
+        +Channel channel
+        +String subject
+        +String body
+        +Status status
+        +boolean read
+        +int attempts
+        +Instant createdAt
+        +Instant sentAt
+    }
+    class MessageTemplate {
+        +String id
+        +String code
+        +Channel channel
+        +String subject
+        +String body
+    }
+    class Channel {
+        <<enumeration>>
+        EMAIL
+        PUSH
+    }
+    class Status {
+        <<enumeration>>
+        PENDING
+        SENT
+        FAILED
+    }
+    MessageTemplate "1" --> "0..*" Notification : sert à générer
+    Notification --> Channel
+    Notification --> Status
+    MessageTemplate --> Channel

@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    actor U as Utilisateur
+    participant FE as Frontend Angular
+    participant GW as API Gateway
+    participant KC as Keycloak
+    participant NS as notification-service
+    participant DB as MongoDB notification_db
+
+    U->>FE: ouvre ses notifications
+    FE->>GW: GET /api/notifications/me?read=false + JWT
+    GW->>KC: valide le JWT (signature, expiration)
+    KC-->>GW: token valide
+    GW->>NS: transmet la requête (userId = claim sub)
+    NS->>DB: find userId, read=false, tri par createdAt décroissant
+    DB-->>NS: liste des notifications
+    NS-->>FE: 200 JSON (liste)
+
+    U->>FE: clique sur une notification
+    FE->>GW: PATCH /api/notifications/{id}/read + JWT
+    GW->>NS: transmet
+    alt notification trouvée et appartient à l'utilisateur
+        NS->>DB: update read=true
+        NS-->>FE: 200 notification mise à jour
+    else introuvable ou d'un autre utilisateur
+        NS-->>FE: 404 Not Found
+    end
+    Note over GW,NS: sans JWT valide la Gateway répond 401, rôle insuffisant 403

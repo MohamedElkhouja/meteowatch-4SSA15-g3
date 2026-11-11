@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    participant AL as alert-service
+    participant MQ as RabbitMQ
+    participant NS as notification-service
+    participant US as user-service
+    participant DB as MongoDB notification_db
+    participant EX as SMTP / Push
+
+    AL->>MQ: publie AlertTriggered (alertId, level, region, value)
+    Note over AL,MQ: asynchrone, alert-service n'attend pas la réponse
+    MQ->>NS: livre AlertTriggered
+    NS->>US: GET /api/users/subscribers?region=Nord (OpenFeign, synchrone)
+    alt user-service disponible
+        US-->>NS: 200 liste des abonnés et canaux
+        loop pour chaque abonné
+            NS->>DB: cherche le modèle (code AlertTriggered, canal)
+            DB-->>NS: MessageTemplate
+            NS->>NS: remplace les variables region et level
+            NS->>DB: enregistre Notification (PENDING, read=false)
+            NS->>EX: envoie email ou push
+            alt envoi réussi
+                EX-->>NS: OK
+                NS->>DB: statut SENT
+            else échec d'envoi
+                EX--xNS: erreur
+                NS->>DB: statut FAILED
+                NS->>NS: nouvelle tentative (retry)
+            end
+        end
+        NS-->>MQ: ack du message
+    else user-service indisponible
+        US--xNS: timeout ou circuit breaker ouvert
+        NS->>NS: retry avec délai croissant
+        NS-->>MQ: nack, après N essais message en dead-letter queue
+    end
