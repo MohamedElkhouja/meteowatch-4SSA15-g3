@@ -1,36 +1,48 @@
-# notification-service (Module 6 – Notifications)
-**Responsable :** Mohamed Taher Elkhouja · **Port :** 8086 · **Techno :** Spring Boot
+# Notification Service
 
-## Responsabilités (contexte borné : diffusion des messages)
-- Envoi des notifications suite aux alertes (email, push)
-- Historique par utilisateur (lue / non lue)
-- Modèles de messages
+This FastAPI service follows the Eureka assignment requirements. It registers
+with Eureka as `NOTIFICATION` and exposes `GET /api/notifications/hello`.
 
-## Modèle de données
-Base : **MySQL** — historique transactionnel (statut d'envoi, lu / non lu) et modèles structurés.
+## Configuration
 
-| Entité | Attributs |
-|---|---|
-| Notification | id, userId, alertId, channel (EMAIL, PUSH), subject, body, status (SENT, FAILED, PENDING), read, createdAt |
-| MessageTemplate | id, code, channel, subject, body (avec variables {{region}}, {{level}}) |
+| Environment variable | Default | Description |
+|---|---|---|
+| `PORT` | `8084` | HTTP port and registered Eureka instance port |
+| `EUREKA_SERVER` | `http://localhost:8761/eureka` | Eureka server URL |
 
-## API REST
+## Run on Windows
 
-| Méthode | URI | Description | Codes |
-|---|---|---|---|
-| GET | /api/notifications/me | Mes notifications (`?read=false`) | 200, 401 |
-| PATCH | /api/notifications/{id}/read | Marquer comme lue | 200, 404 |
-| GET | /api/notifications/me/unread-count | Nombre de non lues | 200 |
-| POST | /api/templates | Créer un modèle | 201, 400 |
-| GET | /api/templates | Lister | 200 |
-| PUT | /api/templates/{id} | Modifier | 200, 404 |
-| DELETE | /api/templates/{id} | Supprimer | 204, 404 |
+From this directory, create and activate a virtual environment, then install
+the dependencies:
 
-Événement consommé : `alert.triggered`.
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
 
-## Interactions
-| Direction | Service | Mode | Données | Si indisponible |
-|---|---|---|---|---|
-| Consomme | alert-service | async (RabbitMQ) | `alert.triggered` | message conservé dans la file |
-| Appelle | user-service | OpenFeign (sync) | abonnés + canaux de la région | retry puis notification PENDING rejouée |
-| Appelle | serveur SMTP / push | sync | envoi | statut FAILED, nouvelle tentative |
+Start the service:
+
+```powershell
+python main.py
+```
+
+The service listens on `http://localhost:8084` by default. Once it starts,
+`NOTIFICATION` should appear on the Eureka dashboard at `http://localhost:8761`.
+
+To run another instance on a different port, open another terminal, activate
+the same virtual environment, and run:
+
+```powershell
+$env:PORT = "8085"
+python main.py
+```
+
+Override the Eureka URL with `EUREKA_SERVER` if the server is not running at
+the default address.
+
+## Test
+
+```powershell
+python -m unittest discover -s tests
+```
