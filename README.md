@@ -65,6 +65,12 @@ Composants : Frontend Angular → **API Gateway** (Spring Cloud Gateway, sécuri
 
 Diagramme : `Documentation/Diagrams/architecture-globale.png`
 
+### Tableau de bord Eureka
+
+Le service `notification-service` s'enregistre auprès d'Eureka sous le nom `NOTIFICATION` sur le port `8084`.
+
+![Tableau de bord Eureka montrant le service notification enregistré](Documentation/Presentation/eureka-dashboard-notification.png)
+
 ## 5. Interactions entre services
 
 **Synchrone (OpenFeign)** – l'appelant a besoin de la réponse immédiatement :
